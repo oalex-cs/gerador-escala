@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Disponibilidade — Escala de Culto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.1" />
+  <style>
+    /* Estilos extras específicos para esta página simplificada */
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .form-container {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 4vh;
+    }
+    .hero-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .hero-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--surface-muted);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 14px 16px;
+      transition: all var(--transition);
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-dim);
+      background: var(--surface-card);
+    }
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .checkbox-item-large {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .checkbox-item-large:hover {
+      border-color: var(--primary-border);
+      background: var(--primary-dim);
+    }
+    .checkbox-item-large input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    .date-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .date-day {
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+    .date-month {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    .success-message {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <div id="form-view">
+      <h1 class="hero-title">Disponibilidade</h1>
+      <p class="hero-subtitle">Informe quais sábados você pode servir neste mês.</p>
+
+      <div class="panel">
+        <div class="form-group">
+          <label class="form-label" for="nome-membro">Qual é o seu nome?</label>
+          <input type="text" id="nome-membro" class="form-input" placeholder="Digite seu nome completo..." maxlength="50" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sábados Disponíveis</label>
+          <div id="saturdays-list" class="checkbox-list">
+            <!-- Gerado via JS -->
+          </div>
+        </div>
+
+        <button id="btn-submit" class="btn btn-primary w-full" style="padding: 16px; font-size: 1rem;">
+          Enviar Disponibilidade
+        </button>
+      </div>
+    </div>
+
+    <div id="success-view" class="panel hidden success-message">
+      <div class="success-icon">🙌</div>
+      <h2 class="hero-title" style="font-size: 1.5rem;">Muito Obrigado!</h2>
+      <p class="hero-subtitle" style="margin-bottom: 0;">Sua disponibilidade foi enviada e o sistema foi atualizado.</p>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="{{ url_for('static', filename='membro.js') }}?v=1.1"></script>
+</body>
+</html>

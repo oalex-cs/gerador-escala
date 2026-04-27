@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escala de Culto — Gestão de Membros</title>
+  <meta name="description" content="Sistema de geração automática de escala de serviço para cultos aos sábados. Cadastre membros e suas disponibilidades." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.2" />
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">✝</span>
+        <div>
+          <span class="logo-title">Escala de Culto</span>
+          <span class="logo-sub">Gestão de Membros</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-copy-link" class="btn btn-ghost btn-sm" title="Copiar link do questionário para os membros">
+          🔗 Link do Formulário
+        </button>
+        <button id="btn-gerar" class="btn btn-primary btn-generate" title="Gerar Escala">
+          <span class="btn-icon">⚡</span>
+          Gerar Escala
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+
+    <!-- COLUNA ESQUERDA: Cadastro -->
+    <section class="panel panel-left">
+      <div class="panel-header">
+        <h2 class="panel-title">Membros</h2>
+        <span class="badge" id="badge-count">0</span>
+      </div>
+
+      <!-- Formulário de novo membro -->
+      <form id="form-membro" class="add-form" autocomplete="off">
+        <div class="input-group">
+          <input
+            type="text"
+            id="input-nome"
+            class="input"
+            placeholder="Nome do membro..."
+            required
+            maxlength="60"
+          />
+          <button type="submit" class="btn btn-accent" id="btn-add-membro" title="Adicionar membro">
+            <span>＋</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Lista de membros -->
+      <ul class="member-list" id="member-list">
+        <!-- preenchido via JS -->
+      </ul>
+
+      <div class="empty-state" id="empty-state">
+        <span class="empty-icon">👥</span>
+        <p>Nenhum membro cadastrado.</p>
+        <p class="empty-hint">Adicione membros acima para começar.</p>
+      </div>
+    </section>
+
+    <!-- COLUNA DIREITA: Disponibilidades + Escala -->
+    <section class="panel panel-right">
+
+      <!-- Painel de disponibilidades (aparece ao clicar em um membro) -->
+      <div id="avail-panel" class="avail-panel hidden">
+        <div class="avail-header">
+          <div>
+            <h2 class="panel-title">Disponibilidades</h2>
+            <p class="avail-member-name" id="avail-member-name">—</p>
+          </div>
+          <button class="btn btn-ghost" id="btn-close-avail" title="Fechar">✕</button>
+        </div>
+
+        <p class="avail-hint">Selecione os sábados em que <strong id="avail-hint-name">—</strong> está disponível:</p>
+
+        <div class="date-picker-wrapper">
+          <input type="date" id="date-picker" class="input date-input" />
+          <button class="btn btn-accent" id="btn-add-date" title="Adicionar data">＋ Adicionar</button>
+        </div>
+
+        <ul class="date-list" id="date-list">
+          <!-- datas selecionadas -->
+        </ul>
+
+        <div class="empty-state hidden" id="dates-empty-state">
+          <span class="empty-icon">📅</span>
+          <p>Nenhuma data selecionada.</p>
+        </div>
+
+        <div class="avail-actions">
+          <button class="btn btn-primary w-full" id="btn-save-avail">💾 Salvar Disponibilidades</button>
+        </div>
+      </div>
+
+      <!-- Placeholder quando nenhum membro está selecionado -->
+      <div id="select-prompt" class="select-prompt">
+        <div class="select-prompt-inner">
+          <span class="select-prompt-icon">👈</span>
+          <h3>Selecione um membro</h3>
+          <p>Clique em um membro na lista à esquerda para gerenciar suas disponibilidades.</p>
+        </div>
+      </div>
+
+      <!-- Escala Gerada -->
+      <div id="schedule-panel" class="schedule-panel hidden">
+        <div class="schedule-header">
+          <h2 class="panel-title">Escala Gerada</h2>
+          <div class="export-actions">
+            <button class="btn btn-excel btn-sm" id="btn-export-xlsx" title="Exportar planilha Excel formatada">
+              📊 Excel
+            </button>
+            <button class="btn btn-ghost btn-sm" id="btn-export-csv" title="Exportar CSV simples">
+              ⬇ CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="schedule-table-wrapper">
+          <table class="schedule-table" id="schedule-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Dia da Semana</th>
+                <th>Membros</th>
+                <th style="width: 60px;"></th>
+              </tr>
+            </thead>
+            <tbody id="schedule-tbody">
+              <!-- linhas geradas via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <button class="btn btn-ghost btn-sm mt-2" id="btn-close-schedule">✕ Fechar Escala</button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ===================== MODAL DE EDIÇÃO ===================== -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-content panel">
+      <div class="panel-header" style="margin-bottom: 12px;">
+        <div>
+          <h2 class="panel-title">Editar Escala</h2>
+          <p class="avail-hint" id="edit-modal-date" style="font-size: 0.8rem; margin-top: 2px;">Data</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-close-modal" style="padding: 4px 8px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted" style="margin-bottom: 12px; font-size: 0.85rem;">Selecione quem vai servir neste dia:</p>
+        <div id="edit-members-list" class="member-list" style="max-height: 40vh; overflow-y: auto;">
+          <!-- checkboxes dinâmicos -->
+        </div>
+      </div>
+      <div class="modal-footer mt-2" style="margin-top: 20px;">
+        <button class="btn btn-primary w-full" id="btn-save-edit">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TOAST ===================== -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="{{ url_for('static', filename='app.js') }}?v=1.3"></script>
+</body>
+</html>
