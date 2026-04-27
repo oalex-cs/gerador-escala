@@ -15,6 +15,23 @@ from datetime import datetime
 from collections import defaultdict
 from typing import List, Tuple, Dict, Set
 
+from dotenv import load_dotenv
+load_dotenv()
+
+USE_SUPABASE = False
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        from supabase import create_client, Client
+        supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        USE_SUPABASE = True
+        print("[OK] Supabase conectado!")
+    except Exception as e:
+        print(f"[ERRO] Erro ao conectar no Supabase: {e}")
+
+
 import pandas as pd
 from openpyxl.styles import (
     PatternFill, Font, Alignment, Border, Side
@@ -32,7 +49,16 @@ DATA_FILE = os.path.join(os.path.dirname(__file__), "membros.json")
 db_lock = threading.Lock()
 
 def load_data() -> dict:
-    """Carrega os dados do arquivo JSON de forma segura com lock."""
+    """Carrega os dados da nuvem ou do arquivo local."""
+    if USE_SUPABASE:
+        try:
+            res = supabase_client.table('membros').select('*').execute()
+            # res.data is a list of dicts: [{"nome": "...", "disponibilidades": [...]}]
+            return {"membros": res.data}
+        except Exception as e:
+            print(f"Erro ao ler do Supabase: {e}")
+            return {"membros": []}
+
     with db_lock:
         if not os.path.exists(DATA_FILE):
             return {"membros": []}
@@ -128,6 +154,14 @@ def add_membro():
     if not nome:
         return jsonify({"erro": "Nome inválido."}), 400
 
+    if USE_SUPABASE:
+        try:
+            # tenta inserir. Vai falhar se a chave primaria "nome" ja existir
+            supabase_client.table('membros').insert({"nome": nome, "disponibilidades": []}).execute()
+            return jsonify({"ok": True, "nome": nome}), 201
+        except Exception as e:
+            return jsonify({"erro": "Membro já cadastrado ou erro no banco."}), 409
+            
     data = load_data()
     # Verifica duplicata (case-insensitive)
     nomes_existentes = [m["nome"].lower() for m in data["membros"]]
@@ -141,6 +175,13 @@ def add_membro():
 
 @app.route("/api/membros/<nome>", methods=["DELETE"])
 def delete_membro(nome: str):
+    if USE_SUPABASE:
+        try:
+            supabase_client.table('membros').delete().eq('nome', nome).execute()
+            return jsonify({"ok": True})
+        except Exception:
+            return jsonify({"erro": "Erro ao remover membro na nuvem."}), 500
+
     data = load_data()
     antes = len(data["membros"])
     data["membros"] = [m for m in data["membros"] if m["nome"] != nome]
@@ -163,6 +204,13 @@ def update_disponibilidades(nome: str):
                 return jsonify({"erro": f"{d_str} não é sábado."}), 400
         except ValueError:
             return jsonify({"erro": f"Data inválida: {d_str}"}), 400
+
+    if USE_SUPABASE:
+        try:
+            supabase_client.table('membros').update({"disponibilidades": datas}).eq('nome', nome).execute()
+            return jsonify({"ok": True})
+        except Exception:
+            return jsonify({"erro": "Erro na nuvem."}), 500
 
     data = load_data()
     for m in data["membros"]:
@@ -191,6 +239,13 @@ def submit_membro_form():
                 return jsonify({"erro": f"{d_str} não é sábado."}), 400
         except ValueError:
             return jsonify({"erro": f"Data inválida: {d_str}"}), 400
+
+    if USE_SUPABASE:
+        try:
+            supabase_client.table('membros').upsert({"nome": nome, "disponibilidades": datas}).execute()
+            return jsonify({"ok": True}), 200
+        except Exception as e:
+            return jsonify({"erro": f"Erro na nuvem: {e}"}), 500
 
     data = load_data()
     
