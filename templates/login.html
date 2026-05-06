@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar - Escala de Culto</title>
+  <meta name="description" content="Acesso administrativo do sistema de escala de culto." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.4" />
+</head>
+<body class="auth-body">
+  <main class="auth-main">
+    <section class="panel auth-panel">
+      <div class="auth-brand">
+        <span class="logo-icon">+</span>
+        <div>
+          <h1 class="auth-title">Escala de Culto</h1>
+          <p class="auth-subtitle">Painel administrativo</p>
+        </div>
+      </div>
+
+      {% if error %}
+        <div class="auth-alert">{{ error }}</div>
+      {% elif not admin_password_configured %}
+        <div class="auth-alert">Configure ADMIN_PASSWORD no arquivo .env para habilitar o acesso.</div>
+      {% endif %}
+
+      <form method="post" class="auth-form" autocomplete="off">
+        <input type="hidden" name="next" value="{{ next_url }}" />
+
+        <label class="auth-label" for="password">Senha do administrador</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          class="input auth-input"
+          placeholder="Digite a senha"
+          required
+          autofocus
+        />
+
+        <button class="btn btn-primary w-full auth-submit" type="submit">Entrar</button>
+      </form>
+
+      <a class="auth-public-link" href="{{ url_for('membro_form') }}">Abrir formulario dos membros</a>
+    </section>
+  </main>
+</body>
+</html>
