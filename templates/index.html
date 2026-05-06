@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.2" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.8" />
 </head>
 <body>
 
@@ -16,20 +16,22 @@
   <header class="header">
     <div class="header-inner">
       <div class="logo">
-        <span class="logo-icon">✝</span>
+        <span class="logo-icon">EC</span>
         <div>
           <span class="logo-title">Escala de Culto</span>
           <span class="logo-sub">Gestão de Membros</span>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="header-actions">
         <button id="btn-copy-link" class="btn btn-ghost btn-sm" title="Copiar link do questionário para os membros">
-          🔗 Link do Formulário
+          Link do Formulário
         </button>
         <button id="btn-gerar" class="btn btn-primary btn-generate" title="Gerar Escala">
-          <span class="btn-icon">⚡</span>
           Gerar Escala
         </button>
+        <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+          <button type="submit" class="btn btn-ghost btn-sm" title="Sair do painel">Sair</button>
+        </form>
       </div>
     </div>
   </header>
@@ -39,6 +41,30 @@
 
     <!-- COLUNA ESQUERDA: Cadastro -->
     <section class="panel panel-left">
+      <div class="campaign-block">
+        <div class="panel-header">
+          <h2 class="panel-title">Campanha Ativa</h2>
+          <span class="badge" id="active-campaign-badge">--</span>
+        </div>
+
+        <p class="campaign-title" id="active-campaign-title">Carregando...</p>
+        <p class="campaign-meta" id="active-campaign-meta">Selecione o mes da escala.</p>
+
+        <div class="campaign-form">
+          <input type="month" id="campaign-month" class="input" />
+          <button type="button" class="btn btn-accent btn-sm" id="btn-save-campaign">Ativar</button>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-sm w-full" id="btn-reset-responses">
+          Zerar Respostas
+        </button>
+
+        <ul class="campaign-list" id="campaign-list">
+          <!-- campanhas via JS -->
+        </ul>
+      </div>
+
+      <div class="section-divider"></div>
       <div class="panel-header">
         <h2 class="panel-title">Membros</h2>
         <span class="badge" id="badge-count">0</span>
@@ -46,19 +72,29 @@
 
       <!-- Formulário de novo membro -->
       <form id="form-membro" class="add-form" autocomplete="off">
-        <div class="input-group">
+        <div class="member-form-grid">
           <input
             type="text"
             id="input-nome"
             class="input"
-            placeholder="Nome do membro..."
+            placeholder="Nome completo..."
             required
             maxlength="60"
           />
+          <input
+            type="tel"
+            id="input-whatsapp"
+            class="input"
+            placeholder="WhatsApp com DDD..."
+            required
+            inputmode="tel"
+            maxlength="20"
+          />
           <button type="submit" class="btn btn-accent" id="btn-add-membro" title="Adicionar membro">
-            <span>＋</span>
+            <span>+</span>
           </button>
         </div>
+        <p class="form-hint">O WhatsApp evita duplicidade entre nomes parecidos.</p>
       </form>
 
       <!-- Lista de membros -->
@@ -67,7 +103,6 @@
       </ul>
 
       <div class="empty-state" id="empty-state">
-        <span class="empty-icon">👥</span>
         <p>Nenhum membro cadastrado.</p>
         <p class="empty-hint">Adicione membros acima para começar.</p>
       </div>
@@ -83,14 +118,14 @@
             <h2 class="panel-title">Disponibilidades</h2>
             <p class="avail-member-name" id="avail-member-name">—</p>
           </div>
-          <button class="btn btn-ghost" id="btn-close-avail" title="Fechar">✕</button>
+          <button class="btn btn-ghost" id="btn-close-avail" title="Fechar">x</button>
         </div>
 
         <p class="avail-hint">Selecione os sábados em que <strong id="avail-hint-name">—</strong> está disponível:</p>
 
         <div class="date-picker-wrapper">
           <input type="date" id="date-picker" class="input date-input" />
-          <button class="btn btn-accent" id="btn-add-date" title="Adicionar data">＋ Adicionar</button>
+          <button class="btn btn-accent" id="btn-add-date" title="Adicionar data">+ Adicionar</button>
         </div>
 
         <ul class="date-list" id="date-list">
@@ -98,19 +133,17 @@
         </ul>
 
         <div class="empty-state hidden" id="dates-empty-state">
-          <span class="empty-icon">📅</span>
           <p>Nenhuma data selecionada.</p>
         </div>
 
         <div class="avail-actions">
-          <button class="btn btn-primary w-full" id="btn-save-avail">💾 Salvar Disponibilidades</button>
+          <button class="btn btn-primary w-full" id="btn-save-avail">Salvar Disponibilidades</button>
         </div>
       </div>
 
       <!-- Placeholder quando nenhum membro está selecionado -->
       <div id="select-prompt" class="select-prompt">
         <div class="select-prompt-inner">
-          <span class="select-prompt-icon">👈</span>
           <h3>Selecione um membro</h3>
           <p>Clique em um membro na lista à esquerda para gerenciar suas disponibilidades.</p>
         </div>
@@ -119,13 +152,19 @@
       <!-- Escala Gerada -->
       <div id="schedule-panel" class="schedule-panel hidden">
         <div class="schedule-header">
-          <h2 class="panel-title">Escala Gerada</h2>
+          <div>
+            <h2 class="panel-title" id="schedule-title">Escala Gerada</h2>
+            <p class="schedule-meta" id="schedule-meta">Ainda nao salva.</p>
+          </div>
           <div class="export-actions">
+            <button class="btn btn-accent btn-sm" id="btn-save-schedule" title="Salvar escala atual">
+              Salvar
+            </button>
             <button class="btn btn-excel btn-sm" id="btn-export-xlsx" title="Exportar planilha Excel formatada">
-              📊 Excel
+              Excel
             </button>
             <button class="btn btn-ghost btn-sm" id="btn-export-csv" title="Exportar CSV simples">
-              ⬇ CSV
+              CSV
             </button>
           </div>
         </div>
@@ -146,7 +185,7 @@
           </table>
         </div>
 
-        <button class="btn btn-ghost btn-sm mt-2" id="btn-close-schedule">✕ Fechar Escala</button>
+        <button class="btn btn-ghost btn-sm mt-2" id="btn-close-schedule">Fechar Escala</button>
       </div>
 
     </section>
@@ -160,7 +199,7 @@
           <h2 class="panel-title">Editar Escala</h2>
           <p class="avail-hint" id="edit-modal-date" style="font-size: 0.8rem; margin-top: 2px;">Data</p>
         </div>
-        <button class="btn btn-ghost btn-sm" id="btn-close-modal" style="padding: 4px 8px;">✕</button>
+        <button class="btn btn-ghost btn-sm" id="btn-close-modal" style="padding: 4px 8px;">x</button>
       </div>
       <div class="modal-body">
         <p class="text-muted" style="margin-bottom: 12px; font-size: 0.85rem;">Selecione quem vai servir neste dia:</p>
@@ -177,6 +216,6 @@
   <!-- ===================== TOAST ===================== -->
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="{{ url_for('static', filename='app.js') }}?v=1.3"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=1.7"></script>
 </body>
 </html>

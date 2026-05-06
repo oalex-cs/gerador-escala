@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.8" />
   <style>
     /* Estilos extras específicos para esta página simplificada */
     body {
@@ -128,6 +128,11 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label" for="whatsapp-membro">WhatsApp</label>
+          <input type="tel" id="whatsapp-membro" class="form-input" placeholder="DDD + numero..." inputmode="tel" maxlength="20" required />
+        </div>
+
+        <div class="form-group">
           <label class="form-label">Sábados Disponíveis</label>
           <div id="saturdays-list" class="checkbox-list">
             <!-- Gerado via JS -->
@@ -141,7 +146,6 @@
     </div>
 
     <div id="success-view" class="panel hidden success-message">
-      <div class="success-icon">🙌</div>
       <h2 class="hero-title" style="font-size: 1.5rem;">Muito Obrigado!</h2>
       <p class="hero-subtitle" style="margin-bottom: 0;">Sua disponibilidade foi enviada e o sistema foi atualizado.</p>
     </div>
@@ -149,6 +153,6 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="{{ url_for('static', filename='membro.js') }}?v=1.1"></script>
+  <script src="{{ url_for('static', filename='membro.js') }}?v=1.3"></script>
 </body>
 </html>
