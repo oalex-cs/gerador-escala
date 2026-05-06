@@ -3,11 +3,90 @@
     {
       "nome": "Alex",
       "disponibilidades": [
+        "2026-06-13",
+        "2026-06-20"
+      ],
+      "id": "6388a591-79b4-43cc-9512-ccfda7074412",
+      "nome_key": "alex",
+      "whatsapp": "21972062540",
+      "whatsapp_key": "21972062540"
+    }
+  ],
+  "campanhas": [
+    {
+      "id": "2026-06",
+      "ano": 2026,
+      "mes": 6,
+      "nome": "Junho 2026",
+      "sabados": [
+        "2026-06-06",
+        "2026-06-13",
+        "2026-06-20",
+        "2026-06-27"
+      ],
+      "status": "ativa",
+      "created_at": "2026-05-05T14:35:19Z",
+      "updated_at": "2026-05-06T01:50:42Z"
+    },
+    {
+      "id": "2026-05",
+      "ano": 2026,
+      "mes": 5,
+      "nome": "Maio 2026",
+      "sabados": [
         "2026-05-02",
         "2026-05-09",
         "2026-05-16",
         "2026-05-23",
         "2026-05-30"
+      ],
+      "status": "arquivada",
+      "created_at": "2026-05-05T14:35:01Z",
+      "updated_at": "2026-05-05T23:22:11Z"
+    }
+  ],
+  "campanha_ativa_id": "2026-06",
+  "escalas": [
+    {
+      "id": "2026-05",
+      "campanha_id": "2026-05",
+      "nome": "Escala - Maio 2026",
+      "created_at": "2026-05-05T14:41:30Z",
+      "updated_at": "2026-05-05T14:41:30Z",
+      "itens": [
+        {
+          "data": "2026-05-02",
+          "membros": [
+            "Fabio Fiochi"
+          ]
+        },
+        {
+          "data": "2026-05-09",
+          "membros": [
+            "Giancarlo Patricio",
+            "Filippe"
+          ]
+        },
+        {
+          "data": "2026-05-16",
+          "membros": [
+            "João Pedro",
+            "Fabio Fiochi"
+          ]
+        },
+        {
+          "data": "2026-05-23",
+          "membros": [
+            "Giancarlo Patricio",
+            "Filippe"
+          ]
+        },
+        {
+          "data": "2026-05-30",
+          "membros": [
+            "Fabio Fiochi"
+          ]
+        }
       ]
     }
   ]
