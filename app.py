@@ -260,25 +260,110 @@ def save_local_data(data: dict):
             json.dump(normalize_data(data), f, ensure_ascii=False, indent=2)
 
 
-def load_data() -> dict:
-    """Carrega os dados da nuvem ou do arquivo local."""
-    data = load_local_data()
-    if USE_SUPABASE:
-        try:
-            res = supabase_client.table('membros').select('*').execute()
-            # res.data is a list of dicts: [{"nome": "...", "disponibilidades": [...]}]
-            data["membros"] = res.data
-            return normalize_data(data)
-        except Exception as e:
-            print(f"Erro ao ler do Supabase: {e}")
-            data["membros"] = []
-            return normalize_data(data)
+def _supabase_table_rows(table_name: str) -> list:
+    result = supabase_client.table(table_name).select("*").execute()
+    return result.data or []
 
+
+def _member_payload(member: dict) -> dict:
+    normalized = normalize_member(member)
+    payload = {
+        "id": normalized.get("id"),
+        "nome": normalized.get("nome"),
+        "nome_key": normalized.get("nome_key"),
+        "whatsapp": normalized.get("whatsapp"),
+        "whatsapp_key": normalized.get("whatsapp_key"),
+        "disponibilidades": normalized.get("disponibilidades", []),
+    }
+    return {key: value for key, value in payload.items() if value is not None}
+
+
+def _campaign_payload(campaign: dict) -> dict:
+    payload = {
+        "id": campaign.get("id"),
+        "ano": campaign.get("ano"),
+        "mes": campaign.get("mes"),
+        "nome": campaign.get("nome"),
+        "sabados": campaign.get("sabados", []),
+        "status": campaign.get("status", "arquivada"),
+        "created_at": campaign.get("created_at"),
+        "updated_at": campaign.get("updated_at"),
+    }
+    return {key: value for key, value in payload.items() if value is not None}
+
+
+def _schedule_payload(schedule: dict) -> dict:
+    payload = {
+        "id": schedule.get("id"),
+        "campanha_id": schedule.get("campanha_id"),
+        "nome": schedule.get("nome"),
+        "itens": schedule.get("itens", []),
+        "created_at": schedule.get("created_at"),
+        "updated_at": schedule.get("updated_at"),
+    }
+    return {key: value for key, value in payload.items() if value is not None}
+
+
+def load_supabase_data() -> dict:
+    data = normalize_data({
+        "membros": _supabase_table_rows("membros"),
+        "campanhas": _supabase_table_rows("campanhas"),
+        "escalas": _supabase_table_rows("escalas"),
+        "campanha_ativa_id": None,
+    })
+    data["campanhas"].sort(key=lambda campaign: campaign.get("id", ""), reverse=True)
+    data["escalas"].sort(key=lambda schedule: schedule.get("campanha_id", ""), reverse=True)
+
+    active_campaign = next(
+        (campaign for campaign in data["campanhas"] if campaign.get("status") == "ativa"),
+        None,
+    )
+    if active_campaign:
+        data["campanha_ativa_id"] = active_campaign.get("id")
     return data
 
 
+def save_supabase_data(data: dict):
+    data = normalize_data(data)
+
+    if data["membros"]:
+        supabase_client.table("membros").upsert([
+            _member_payload(member) for member in data["membros"]
+        ]).execute()
+
+    if data["campanhas"]:
+        supabase_client.table("campanhas").upsert([
+            _campaign_payload(campaign) for campaign in data["campanhas"]
+        ]).execute()
+
+    if data["escalas"]:
+        supabase_client.table("escalas").upsert([
+            _schedule_payload(schedule) for schedule in data["escalas"]
+        ]).execute()
+
+
+def load_data() -> dict:
+    """Carrega os dados da nuvem ou do arquivo local."""
+    if USE_SUPABASE:
+        try:
+            return load_supabase_data()
+        except Exception as e:
+            print(f"Erro ao ler do Supabase: {e}", flush=True)
+            raise
+
+    return load_local_data()
+
+
 def save_data(data: dict):
-    """Salva os dados no arquivo JSON de forma segura com lock."""
+    """Salva os dados no Supabase em producao ou no JSON em desenvolvimento."""
+    if USE_SUPABASE:
+        try:
+            save_supabase_data(data)
+            return
+        except Exception as e:
+            print(f"Erro ao salvar no Supabase: {e}", flush=True)
+            raise
+
     save_local_data(data)
 
 
