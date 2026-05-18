@@ -28,6 +28,12 @@ Novos membros precisam informar nome completo e WhatsApp com DDD. O sistema norm
 
 Sem `ADMIN_PASSWORD`, o painel administrativo fica bloqueado por seguranca. O formulario publico em `/membro` continua acessivel para os membros enviarem disponibilidade.
 
+## Supabase
+
+Em ambientes serverless como Vercel, use Supabase para persistencia. O arquivo `membros.json` fica apenas para desenvolvimento local, porque o filesystem do deploy nao e gravavel.
+
+Antes do deploy, rode o conteudo de `supabase_schema.sql` no SQL Editor do Supabase. Ele cria as tabelas `membros`, `campanhas` e `escalas`, incluindo o indice unico de `whatsapp_key`.
+
 ## Executar localmente
 
 ```bash
