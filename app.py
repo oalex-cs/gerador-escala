@@ -13,6 +13,7 @@ import io
 import os
 import re
 import threading
+import traceback
 import unicodedata
 import uuid
 from datetime import date, datetime, timedelta
@@ -44,6 +45,7 @@ from openpyxl.styles import (
 from openpyxl.utils import get_column_letter
 
 from flask import Flask, jsonify, request, render_template, Response, redirect, session, url_for
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 
@@ -86,6 +88,38 @@ def admin_required(view_func):
         return redirect(url_for("login", next=request.full_path if request.query_string else request.path))
 
     return wrapper
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    if isinstance(error, HTTPException):
+        return error
+
+    traceback.print_exc()
+    if request.path.startswith("/api/"):
+        return jsonify({"erro": "Erro interno no servidor. Confira os logs da Vercel."}), 500
+    return "Internal Server Error", 500
+
+
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    payload = {
+        "ok": True,
+        "supabase_configurado": USE_SUPABASE,
+        "admin_configurado": bool(ADMIN_PASSWORD),
+    }
+
+    if USE_SUPABASE:
+        payload["tabelas"] = {}
+        for table_name in ("membros", "campanhas", "escalas"):
+            try:
+                supabase_client.table(table_name).select("id").limit(1).execute()
+                payload["tabelas"][table_name] = "ok"
+            except Exception as exc:
+                payload["ok"] = False
+                payload["tabelas"][table_name] = str(exc)[:240]
+
+    return jsonify(payload), 200 if payload["ok"] else 500
 
 # --------------------------------------------------------------------------
 # Arquivo de dados (JSON simples, sem banco de dados)
